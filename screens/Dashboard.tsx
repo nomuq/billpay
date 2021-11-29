@@ -78,17 +78,12 @@ export default function Dashboard({ navigation }: any) {
             <View
               style={{
                 flex: 1,
-                // justifyContent: "center",
-                // alignItems: "center",
-                // backgroundColor: "green",
               }}
             >
               <View
-                style={
-                  {
-                    //   flex: 1,
-                  }
-                }
+                style={{
+                  paddingBottom: 10,
+                }}
               >
                 <ProgressBar
                   progress={0.3}
@@ -96,11 +91,8 @@ export default function Dashboard({ navigation }: any) {
                   style={{
                     backgroundColor: "#fff",
                     borderRadius: 10,
-                    // width: "50%",
-                    // width: "80%",
                     height: 10,
                     width: width * 0.85,
-                    // paddingHorizontal: 10,
                   }}
                 />
               </View>
@@ -118,7 +110,7 @@ export default function Dashboard({ navigation }: any) {
                     style={{
                       flexDirection: "row",
                       alignItems: "baseline",
-                      paddingVertical: 4,
+                      paddingVertical: 2,
                     }}
                   >
                     <Text
@@ -220,40 +212,6 @@ export default function Dashboard({ navigation }: any) {
               </View>
             </View>
           </View>
-
-          {/* <View
-          style={{
-            height: 50,
-            width: 50,
-            // alignItems: "center",
-            // justifyContent: "center",
-            position: "absolute",
-            // left: 0,
-            // top: 0,
-            // width: "100%",
-            // height: "100%",
-          }}
-        >
-          <View
-            style={{
-              flex: 1,
-            }}
-          ></View>
-          <BarChart
-            style={{ flex: 1 }}
-            data={data}
-            svg={{ fill }}
-            contentInset={{ top: 30, bottom: 30 }}
-          >
-            <Grid />
-          </BarChart>
-        </View> */}
-          {/* <View
-          style={{
-            flex: 1,
-            // backgroundColor: "transparent",
-          }}
-        ></View> */}
         </View>
         <View style={styles.list}></View>
       </View>
