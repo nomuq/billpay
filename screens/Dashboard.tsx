@@ -340,8 +340,8 @@ function BillList({ bills }: any) {
         backgroundColor: "#ffffff",
       }}
     >
-      {bills.map((bill: any) => {
-        return <BillCard bill={bill}></BillCard>;
+      {bills.map((bill: any, index: number) => {
+        return <BillCard key={index} bill={bill}></BillCard>;
       })}
     </Surface>
   );
