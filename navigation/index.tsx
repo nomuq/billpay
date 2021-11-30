@@ -117,7 +117,7 @@ function RootNavigator() {
                 opacity: pressed ? 0.5 : 1,
               })}
             >
-              <MaterialIcons name="add" size={25} color={Colors.dark.text} />
+              <MaterialIcons name="add" size={22} color={Colors.dark.text} />
             </Pressable>
           ),
           headerLeft: (props) => (
@@ -127,7 +127,7 @@ function RootNavigator() {
                 opacity: pressed ? 0.5 : 1,
               })}
             >
-              <MaterialIcons name="menu" size={25} color={Colors.dark.text} />
+              <MaterialIcons name="menu" size={22} color={Colors.dark.text} />
             </Pressable>
           ),
         })}
