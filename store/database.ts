@@ -27,6 +27,33 @@ class Database {
     return this.runQuery("DELETE FROM billpay WHERE id = ?", [id]);
   }
 
+  // get total amount of unpaid bills
+  async getTotalUnpaidAmount() {
+    const result = await this.runQuery(
+      "SELECT SUM(amount) AS total FROM billpay WHERE paid = 0"
+    );
+    return result.rows._array[0].total ?? 0;
+  }
+
+  // get total amount of paid bills
+  async getTotalPaidAmount() {
+    const result = await this.runQuery(
+      "SELECT SUM(amount) AS total FROM billpay WHERE paid = 1"
+    );
+    return result.rows._array[0].total ?? 0;
+  }
+
+  // paid bills
+  async getPaidBills() {
+    const result = await this.runQuery("SELECT * FROM billpay WHERE paid = 1");
+    return result.rows._array;
+  }
+
+  // pay bill
+  payBill(id: number) {
+    return this.runQuery("UPDATE billpay SET paid = 1 WHERE id = ?", [id]);
+  }
+
   // remove all bills
   removeAllBills() {
     return this.runQuery("DELETE FROM billpay");

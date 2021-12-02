@@ -32,50 +32,122 @@ export default function Dashboard({ navigation }: any) {
 
   const [loading, setLoading] = React.useState(true);
 
+  // total unpaid amount
+  const [totalUnpaid, setTotalUnpaid] = React.useState(0);
+
+  // total paid amount
+  const [totalPaid, setTotalPaid] = React.useState(0);
+
+  // total amount this month
+  const [totalThisMonth, setTotalThisMonth] = React.useState(0);
+
+  // total expenses this month
+  const [totalExpensesThisMonth, setTotalExpensesThisMonth] = React.useState(0);
+
+  // missed bills
+  const [missedBills, setMissedBills] = React.useState<Bill[]>([]);
+
   React.useEffect(() => {
-    db.getBills().then((bills: Bill[]) => {
-      setData(bills);
-      setTodaysBills(
-        bills.filter((bill: Bill) => {
-          let today = new Date();
+    (async () => {
+      try {
+        const today = new Date();
+
+        const bills = await db.getBills();
+        setData(bills);
+        setTodaysBills(
+          bills.filter((bill: Bill) => {
+            let billDate = new Date(bill.date);
+            if (
+              billDate.getDate() === today.getDate() &&
+              billDate.getMonth() === today.getMonth() &&
+              billDate.getFullYear() === today.getFullYear()
+            ) {
+              return bill;
+            }
+          })
+        );
+        setUpcomingBills(
+          bills.filter((bill: Bill) => {
+            let billDate = new Date(bill.date);
+            if (
+              billDate.getDate() > today.getDate() ||
+              billDate.getMonth() > today.getMonth() ||
+              billDate.getFullYear() > today.getFullYear()
+            ) {
+              return bill;
+            }
+          })
+        );
+
+        // missed bills
+        setMissedBills(
+          bills.filter((bill: Bill) => {
+            let billDate = new Date(bill.date);
+            if (
+              billDate.getDate() < today.getDate() ||
+              billDate.getMonth() < today.getMonth() ||
+              billDate.getFullYear() < today.getFullYear()
+            ) {
+              if (bill.paid === 0) {
+                return bill;
+              }
+            }
+          })
+        );
+
+        // total amount this month
+        let thisMonthsBills = bills.filter((bill: Bill) => {
           let billDate = new Date(bill.date);
           if (
-            billDate.getDate() === today.getDate() &&
             billDate.getMonth() === today.getMonth() &&
             billDate.getFullYear() === today.getFullYear()
           ) {
             return bill;
           }
-        })
-      );
-      setUpcomingBills(
-        bills.filter((bill: Bill) => {
-          let today = new Date();
-          let billDate = new Date(bill.date);
-          if (
-            billDate.getDate() > today.getDate() ||
-            billDate.getMonth() > today.getMonth() ||
-            billDate.getFullYear() > today.getFullYear()
-          ) {
-            return bill;
-          }
-        })
-      );
-      setLoading(false);
-    });
+        });
+
+        let total = thisMonthsBills.reduce(
+          (acc: number, cur: Bill) => acc + cur.amount,
+          0
+        );
+        setTotalThisMonth(total);
+
+        // total expenses this month
+        setTotalExpensesThisMonth(thisMonthsBills.length);
+
+        const amount = await db.getTotalUnpaidAmount();
+        setTotalUnpaid(amount);
+
+        const paidAmount = await db.getTotalPaidAmount();
+        setTotalPaid(paidAmount);
+
+        setLoading(false);
+      } catch (error) {
+        console.log(error);
+      }
+    })();
 
     // filter todays bills from data
-
-    // add sample bill
+    // var d = new Date();
+    // d.setDate(d.getDate() + 3);
+    // // // add sample bill
     // db.addBill({
-    //   type: BillType.Electricity,
-    //   name: "Electricity",
-    //   amount: 1203,
-    //   date: new Date().toISOString(),
+    //   type: BillType.Gas,
+    //   name: "Gas Bill",
+    //   amount: 1890.88,
+    //   date: d.toISOString(),
     //   paid: 0,
     //   note: "1000431645",
     // });
   }, []);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView
@@ -132,7 +204,7 @@ export default function Dashboard({ navigation }: any) {
                     fontFamily: "OpenSans-Bold",
                   }}
                 >
-                  14,450.00
+                  {totalThisMonth.toFixed(2)}
                 </Text>
               </View>
               <Text
@@ -142,7 +214,7 @@ export default function Dashboard({ navigation }: any) {
                   fontFamily: "OpenSans-Regular",
                 }}
               >
-                Total Expanse this month (7)
+                Total Expanse this month ({totalExpensesThisMonth})
               </Text>
             </View>
             <ProgressBar
@@ -167,13 +239,13 @@ export default function Dashboard({ navigation }: any) {
               }}
             >
               <StatsComponent
-                value="1,500.00"
+                value={totalPaid.toFixed(2)}
                 icon="north-east"
                 icon_color="#16c591"
               />
 
               <StatsComponent
-                value="12,950.00"
+                value={totalUnpaid.toFixed(2)}
                 icon="priority-high"
                 icon_color="#fb7c75"
               />
@@ -188,11 +260,14 @@ export default function Dashboard({ navigation }: any) {
             }}
           >
             <View>
-              <MissedBillsComponent
-                onPress={() => {
-                  navigation.navigate("Modal");
-                }}
-              ></MissedBillsComponent>
+              {missedBills.length > 0 && (
+                <MissedBillsComponent
+                  bills={missedBills}
+                  onPress={() => {
+                    navigation.navigate("Modal");
+                  }}
+                />
+              )}
               <View
                 style={{
                   marginTop: 20,
@@ -324,7 +399,7 @@ function BillCard({ bill }: BillCardProps) {
         backgroundColor: "#fff",
       }}
     >
-      {bill.paid == 1 ? (
+      {bill.paid == 0 ? (
         <View
           style={{
             width: 22,
@@ -412,7 +487,7 @@ function BillCard({ bill }: BillCardProps) {
               fontFamily: "OpenSans-SemiBold",
             }}
           >
-            {Number(bill.amount.toFixed(1)).toLocaleString()}
+            {bill.amount.toFixed(2)}
           </Text>
         </View>
       </View>
@@ -420,7 +495,7 @@ function BillCard({ bill }: BillCardProps) {
   );
 }
 
-function MissedBillsComponent({ onPress }: any) {
+function MissedBillsComponent({ bills, onPress }: any) {
   return (
     <TouchableOpacity onPress={onPress}>
       <Surface
@@ -460,7 +535,7 @@ function MissedBillsComponent({ onPress }: any) {
               fontFamily: "OpenSans-SemiBold",
             }}
           >
-            1
+            {bills.length}
           </Text>
         </View>
       </Surface>
