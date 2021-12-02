@@ -2,6 +2,7 @@ import { FontAwesome } from "@expo/vector-icons";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import * as React from "react";
+import Database from "../store/database";
 
 export default function useCachedResources() {
   const [isLoadingComplete, setLoadingComplete] = React.useState(false);
@@ -21,6 +22,10 @@ export default function useCachedResources() {
           "OpenSans-Regular": require("../assets/fonts/OpenSans-Regular.ttf"),
           "OpenSans-SemiBold": require("../assets/fonts/OpenSans-SemiBold.ttf"),
         });
+
+        // init database
+
+        await Database.getInstance().init();
       } catch (e) {
         // We might want to provide this error information to an error reporting service
         console.warn(e);

@@ -18,103 +18,65 @@ import {
 } from "react-native-safe-area-context";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/core";
+import { useDatabase } from "../hooks/useDatabase";
+import { Bill, BillType } from "../store/database";
 
 export default function Dashboard({ navigation }: any) {
   const insets = useSafeAreaInsets();
+  const { db } = useDatabase();
 
-  const bills = [
-    {
-      bill_name: "Electricity Bill",
-      bill_amount: "1,500.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Paid",
-      bill_number: "09 01455 12544",
-      bill_type: "Electricity",
-    },
-    {
-      bill_name: "Mobile Bill",
-      bill_amount: "300.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "79658 21456",
-      bill_type: "Mobile",
-    },
-    {
-      bill_name: "Internet Bill",
-      bill_amount: "750.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "Satish Babariya",
-      bill_type: "Internet",
-    },
-  ];
+  const [data, setData] = React.useState<Bill[]>([]);
 
-  const upcoming = [
-    {
-      bill_name: "Mobile Bill",
-      bill_amount: "300.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "79658 21456",
-      bill_type: "Mobile",
-    },
-    {
-      bill_name: "Internet Bill",
-      bill_amount: "750.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "Satish Babariya",
-      bill_type: "Internet",
-    },
-    {
-      bill_name: "Mobile Bill",
-      bill_amount: "300.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "79658 21456",
-      bill_type: "Mobile",
-    },
-    {
-      bill_name: "Internet Bill",
-      bill_amount: "750.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "Satish Babariya",
-      bill_type: "Internet",
-    },
-    {
-      bill_name: "Mobile Bill",
-      bill_amount: "300.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "79658 21456",
-      bill_type: "Mobile",
-    },
-    {
-      bill_name: "Internet Bill",
-      bill_amount: "750.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "Satish Babariya",
-      bill_type: "Internet",
-    },
-    {
-      bill_name: "Mobile Bill",
-      bill_amount: "300.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "79658 21456",
-      bill_type: "Mobile",
-    },
-    {
-      bill_name: "Internet Bill",
-      bill_amount: "750.00",
-      bill_due_date: "12/12/2020",
-      bill_status: "Unpaid",
-      bill_number: "Satish Babariya",
-      bill_type: "Internet",
-    },
-  ];
+  const [todaysBills, setTodaysBills] = React.useState<Bill[]>([]);
+  const [upcomingBills, setUpcomingBills] = React.useState<Bill[]>([]);
+
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    db.getBills().then((bills: Bill[]) => {
+      setData(bills);
+      setTodaysBills(
+        bills.filter((bill: Bill) => {
+          let today = new Date();
+          let billDate = new Date(bill.date);
+          if (
+            billDate.getDate() === today.getDate() &&
+            billDate.getMonth() === today.getMonth() &&
+            billDate.getFullYear() === today.getFullYear()
+          ) {
+            return bill;
+          }
+        })
+      );
+      setUpcomingBills(
+        bills.filter((bill: Bill) => {
+          let today = new Date();
+          let billDate = new Date(bill.date);
+          if (
+            billDate.getDate() > today.getDate() ||
+            billDate.getMonth() > today.getMonth() ||
+            billDate.getFullYear() > today.getFullYear()
+          ) {
+            return bill;
+          }
+        })
+      );
+      setLoading(false);
+    });
+
+    // filter todays bills from data
+
+    // add sample bill
+    // db.addBill({
+    //   type: BillType.Electricity,
+    //   name: "Electricity",
+    //   amount: 1203,
+    //   date: new Date().toISOString(),
+    //   paid: 0,
+    //   note: "1000431645",
+    // });
+  }, []);
+
   return (
     <SafeAreaView
       style={{
@@ -237,7 +199,7 @@ export default function Dashboard({ navigation }: any) {
                   marginHorizontal: 2,
                 }}
               >
-                <TodaysBills bills={bills}></TodaysBills>
+                <TodaysBills bills={todaysBills}></TodaysBills>
               </View>
               <View
                 style={{
@@ -245,7 +207,7 @@ export default function Dashboard({ navigation }: any) {
                   marginHorizontal: 2,
                 }}
               >
-                <UpcomingBills bills={upcoming}></UpcomingBills>
+                <UpcomingBills bills={upcomingBills}></UpcomingBills>
               </View>
             </View>
           </View>
@@ -347,7 +309,11 @@ function BillList({ bills }: any) {
   );
 }
 
-function BillCard({ bill }: any) {
+interface BillCardProps {
+  bill: Bill;
+}
+
+function BillCard({ bill }: BillCardProps) {
   return (
     <View
       style={{
@@ -358,7 +324,7 @@ function BillCard({ bill }: any) {
         backgroundColor: "#fff",
       }}
     >
-      {bill.bill_status == "Unpaid" ? (
+      {bill.paid == 1 ? (
         <View
           style={{
             width: 22,
@@ -370,10 +336,10 @@ function BillCard({ bill }: any) {
             margin: 15,
           }}
         >
-          {bill.bill_type == "Internet" && (
+          {bill.type == BillType.Electricity && (
             <FontAwesome5 name="wifi" size={10} color={"#fff"} />
           )}
-          {bill.bill_type == "Mobile" && (
+          {bill.type == BillType.Phone && (
             <FontAwesome5 name="mobile" size={10} color={"#fff"} />
           )}
         </View>
@@ -405,7 +371,7 @@ function BillCard({ bill }: any) {
             fontFamily: "OpenSans-SemiBold",
           }}
         >
-          {bill.bill_name}
+          {bill.name}
         </Text>
         <Text
           style={{
@@ -414,7 +380,7 @@ function BillCard({ bill }: any) {
             color: "#00000099",
           }}
         >
-          {bill.bill_number}
+          {bill.note}
         </Text>
       </View>
       <View
@@ -446,7 +412,7 @@ function BillCard({ bill }: any) {
               fontFamily: "OpenSans-SemiBold",
             }}
           >
-            {bill.bill_amount}
+            {Number(bill.amount.toFixed(1)).toLocaleString()}
           </Text>
         </View>
       </View>
