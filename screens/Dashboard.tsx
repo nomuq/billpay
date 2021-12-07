@@ -1,6 +1,7 @@
 import * as React from "react";
 import {
   PixelRatio,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,7 +12,21 @@ import {
 // import { Text, View } from "../components/Themed";
 import Colors from "../constants/Colors";
 import { BarChart, Grid } from "react-native-svg-charts";
-import { ProgressBar, Snackbar, Surface } from "react-native-paper";
+import {
+  DatePickerModal,
+  en,
+  registerTranslation,
+} from "react-native-paper-dates";
+import {
+  Button,
+  Modal,
+  Portal,
+  ProgressBar,
+  RadioButton,
+  Snackbar,
+  Surface,
+  TextInput,
+} from "react-native-paper";
 import {
   SafeAreaView,
   useSafeAreaInsets,
@@ -19,7 +34,8 @@ import {
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/core";
 import { useDatabase } from "../hooks/useDatabase";
-import { Bill, BillType } from "../store/database";
+import { Bill, BillType, InputBill } from "../store/database";
+import { DeviceEventEmitter } from "react-native";
 
 export default function Dashboard({ navigation }: any) {
   const insets = useSafeAreaInsets();
@@ -47,7 +63,24 @@ export default function Dashboard({ navigation }: any) {
   // missed bills
   const [missedBills, setMissedBills] = React.useState<Bill[]>([]);
 
+  const [visible, setVisible] = React.useState(false);
+  const [refresh, setRefresh] = React.useState(0);
+
+  const showModal = () => setVisible(true);
+  const hideModal = () => {
+    setVisible(false);
+  };
+
   React.useEffect(() => {
+    DeviceEventEmitter.addListener("show.addbill", () => {
+      showModal();
+    });
+
+    DeviceEventEmitter.addListener("refresh.bills", () => {
+      setRefresh(refresh + 1);
+      console.log("refresh bills");
+    });
+
     (async () => {
       try {
         const today = new Date();
@@ -129,17 +162,17 @@ export default function Dashboard({ navigation }: any) {
 
     // filter todays bills from data
     // var d = new Date();
-    // d.setDate(d.getDate() + 3);
+    // // d.setDate(d.getDate() + 3);
     // // // add sample bill
     // db.addBill({
-    //   type: BillType.Gas,
-    //   name: "Gas Bill",
-    //   amount: 1890.88,
+    //   type: BillType.Internet,
+    //   name: "JIO Internet Bill",
+    //   amount: 1200.88,
     //   date: d.toISOString(),
     //   paid: 0,
-    //   note: "1000431645",
+    //   note: "9426678969",
     // });
-  }, []);
+  }, [visible, refresh]);
 
   if (loading) {
     return (
@@ -162,6 +195,11 @@ export default function Dashboard({ navigation }: any) {
           backgroundColor: Colors.background,
         }}
       >
+        <Portal>
+          <Modal visible={visible} onDismiss={hideModal}>
+            <NewBillComponent visible={visible} onDismiss={hideModal} />
+          </Modal>
+        </Portal>
         <View
           style={{
             backgroundColor: Colors.primary,
@@ -218,7 +256,7 @@ export default function Dashboard({ navigation }: any) {
               </Text>
             </View>
             <ProgressBar
-              progress={0.3}
+              progress={totalPaid / totalThisMonth}
               color={"#16c591"}
               style={{
                 backgroundColor: "#fff",
@@ -389,109 +427,119 @@ interface BillCardProps {
 }
 
 function BillCard({ bill }: BillCardProps) {
+  const { db } = useDatabase();
+
   return (
-    <View
-      style={{
-        flexDirection: "row",
-        borderBottomWidth: 1,
-        borderBottomColor: "#00000033",
-        paddingVertical: 6,
-        backgroundColor: "#fff",
+    <TouchableOpacity
+      onPress={() => {
+        db.payBill(bill.id).then(() => {
+          DeviceEventEmitter.emit("refresh.bills");
+        });
       }}
     >
-      {bill.paid == 0 ? (
-        <View
-          style={{
-            width: 22,
-            height: 22,
-            backgroundColor: "#00000099",
-            borderRadius: 22,
-            justifyContent: "center",
-            alignItems: "center",
-            margin: 15,
-          }}
-        >
-          {bill.type == BillType.Electricity && (
-            <FontAwesome5 name="wifi" size={10} color={"#fff"} />
-          )}
-          {bill.type == BillType.Phone && (
-            <FontAwesome5 name="mobile" size={10} color={"#fff"} />
-          )}
-        </View>
-      ) : (
-        <View
-          style={{
-            width: 22,
-            height: 22,
-            backgroundColor: "#16c591",
-            borderRadius: 22,
-            justifyContent: "center",
-            alignItems: "center",
-            margin: 15,
-          }}
-        >
-          <FontAwesome5 name="check" size={10} color={"#fff"} />
-        </View>
-      )}
       <View
         style={{
-          flexDirection: "column",
-          justifyContent: "center",
-          flex: 1,
+          flexDirection: "row",
+          borderBottomWidth: 1,
+          borderBottomColor: "#00000033",
+          paddingVertical: 6,
+          backgroundColor: "#fff",
         }}
       >
-        <Text
-          style={{
-            fontSize: PixelRatio.getFontScale() * 14,
-            fontFamily: "OpenSans-SemiBold",
-          }}
-        >
-          {bill.name}
-        </Text>
-        <Text
-          style={{
-            fontSize: 12,
-            fontFamily: "OpenSans-Medium",
-            color: "#00000099",
-          }}
-        >
-          {bill.note}
-        </Text>
-      </View>
-      <View
-        style={{
-          justifyContent: "center",
-          paddingHorizontal: 15,
-        }}
-      >
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "baseline",
-          }}
-        >
-          <Text
+        {bill.paid == 0 ? (
+          <View
             style={{
-              fontSize: 12,
-              color: "#00000099",
-              fontFamily: "OpenSans-Regular",
-              paddingRight: 2,
+              width: 22,
+              height: 22,
+              backgroundColor: "#00000099",
+              borderRadius: 22,
+              justifyContent: "center",
+              alignItems: "center",
+              margin: 15,
             }}
           >
-            {"\u20B9"}
-          </Text>
+            {bill.type == BillType.Electricity && (
+              <FontAwesome5 name="wifi" size={10} color={"#fff"} />
+            )}
+            {bill.type == BillType.Phone && (
+              <FontAwesome5 name="mobile" size={10} color={"#fff"} />
+            )}
+          </View>
+        ) : (
+          <View
+            style={{
+              width: 22,
+              height: 22,
+              backgroundColor: "#16c591",
+              borderRadius: 22,
+              justifyContent: "center",
+              alignItems: "center",
+              margin: 15,
+            }}
+          >
+            <FontAwesome5 name="check" size={10} color={"#fff"} />
+          </View>
+        )}
+        <View
+          style={{
+            flexDirection: "column",
+            justifyContent: "center",
+            flex: 1,
+          }}
+        >
           <Text
             style={{
-              fontSize: 14,
-              // color: "#ffffff",
+              fontSize: PixelRatio.getFontScale() * 14,
               fontFamily: "OpenSans-SemiBold",
             }}
           >
-            {bill.amount.toFixed(2)}
+            {bill.name}
+          </Text>
+          <Text
+            style={{
+              fontSize: 12,
+              fontFamily: "OpenSans-Medium",
+              color: "#00000099",
+            }}
+          >
+            {bill.note}
           </Text>
         </View>
+        <View
+          style={{
+            justifyContent: "center",
+            paddingHorizontal: 15,
+          }}
+        >
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "baseline",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                color: "#00000099",
+                fontFamily: "OpenSans-Regular",
+                paddingRight: 2,
+              }}
+            >
+              {"\u20B9"}
+            </Text>
+            <Text
+              style={{
+                fontSize: 14,
+                // color: "#ffffff",
+                fontFamily: "OpenSans-SemiBold",
+              }}
+            >
+              {bill.amount.toFixed(2)}
+            </Text>
+          </View>
+        </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -597,6 +645,332 @@ function StatsComponent({ value, icon, icon_color }: any) {
         </Text>
       </View>
     </View>
+  );
+}
+
+// filter todays bills from data
+// var d = new Date();
+// // d.setDate(d.getDate() + 3);
+// // // add sample bill
+// db.addBill({
+//   type: BillType.Internet,
+//   name: "JIO Internet Bill",
+//   amount: 1200.88,
+//   date: d.toISOString(),
+//   paid: 0,
+//   note: "9426678969",
+// });
+
+function BillTypeComponent({
+  types,
+  billType,
+  setBillType,
+  setVisable,
+  bill,
+  setBill,
+}: any) {
+  return (
+    <Surface
+      style={{
+        margin: 15,
+        zIndex: 1,
+        elevation: 2,
+        borderRadius: 4,
+        backgroundColor: "#fff",
+      }}
+    >
+      <View
+        style={{
+          padding: 15,
+        }}
+      >
+        <RadioButton.Group
+          onValueChange={(value) => {
+            if (value) {
+              // setBillType(value);
+              setBill({ ...bill, type: value });
+              setVisable(false);
+            }
+          }}
+          value={bill.type}
+        >
+          {types.map((type: any, index: any) => {
+            return (
+              <View
+                key={index}
+                style={{
+                  backgroundColor:
+                    bill.type === type.type.toString() ? "#16c591" : "#fff",
+                }}
+              >
+                <RadioButton.Item
+                  value={type.type.toString()}
+                  label={type.name}
+                />
+              </View>
+            );
+          })}
+        </RadioButton.Group>
+      </View>
+    </Surface>
+  );
+}
+
+function NewBillComponent({ onDismiss }: any) {
+  const [billType, setBillType] = React.useState<string>(
+    BillType.Electricity.toString()
+  );
+
+  const { db } = useDatabase();
+
+  const types = [
+    { type: BillType.Electricity, name: "Electricity" },
+    { type: BillType.Phone, name: "Phone" },
+    { type: BillType.Internet, name: "Internet" },
+    { type: BillType.Water, name: "Water" },
+    { type: BillType.Gas, name: "Gas" },
+    { type: BillType.Rent, name: "Rent" },
+    { type: BillType.Loan, name: "Loan" },
+    { type: BillType.Other, name: "Other" },
+  ];
+
+  const [visible, setVisable] = React.useState<boolean>(false);
+  const [bill, setBill] = React.useState<InputBill>({
+    type: BillType.Electricity,
+    name: "",
+    amount: 0,
+    date: new Date().toISOString(),
+    paid: 0,
+    note: "",
+  });
+
+  return (
+    <Surface
+      style={{
+        margin: 15,
+        zIndex: 1,
+        elevation: 2,
+        borderRadius: 4,
+        backgroundColor: "#fff",
+      }}
+    >
+      <Portal>
+        <Modal
+          visible={visible}
+          onDismiss={() => {
+            setVisable(false);
+          }}
+        >
+          <BillTypeComponent
+            types={types}
+            billType={billType}
+            setBillType={setBillType}
+            setVisable={setVisable}
+            setBill={setBill}
+            bill={bill}
+          ></BillTypeComponent>
+        </Modal>
+      </Portal>
+
+      <View
+        style={{
+          padding: 15,
+        }}
+      >
+        <View
+          style={{
+            paddingBottom: 10,
+            paddingHorizontal: 5,
+            alignContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 22,
+              // color: "#00000099",
+              fontFamily: "OpenSans-Bold",
+            }}
+          >
+            New Bill
+          </Text>
+        </View>
+        <View
+          style={{
+            marginVertical: 5,
+          }}
+        >
+          <TextInput
+            autoComplete="off"
+            label="Bill Type"
+            value={
+              types.find((t: any) => t.type.toString() === bill.type)?.name
+            }
+            editable={false}
+            onPressIn={() => {
+              setVisable(true);
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            marginVertical: 5,
+          }}
+        >
+          <TextInput
+            autoComplete="off"
+            label="Bill Title"
+            value={bill.name}
+            onChangeText={(text) => {
+              setBill({ ...bill, name: text });
+            }}
+          />
+        </View>
+        <View
+          style={{
+            marginVertical: 5,
+          }}
+        >
+          <TextInput
+            autoComplete="off"
+            label="Bill Amount"
+            keyboardType="number-pad"
+            value={bill.amount.toString()}
+            onChangeText={(text) => {
+              if (text.length > 0) {
+                setBill({
+                  ...bill,
+                  amount: parseFloat(text),
+                });
+              } else {
+                setBill({
+                  ...bill,
+                  amount: 0,
+                });
+              }
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            marginVertical: 5,
+          }}
+        >
+          <BillDatePicker bill={bill} setBill={setBill}></BillDatePicker>
+        </View>
+
+        <View
+          style={{
+            marginVertical: 5,
+          }}
+        >
+          <TextInput
+            autoComplete="off"
+            label="Bill Notes"
+            value={bill.note}
+            onChangeText={(text) => {
+              setBill({ ...bill, note: text });
+            }}
+          />
+        </View>
+
+        <View
+          style={{
+            flexDirection: "row",
+            marginTop: 5,
+          }}
+        >
+          <Button
+            style={{
+              flex: 1,
+              margin: 10,
+            }}
+            onPress={() => {
+              db.addBill({
+                ...bill,
+              });
+              onDismiss();
+            }}
+            uppercase={false}
+            mode="outlined"
+          >
+            Save
+          </Button>
+          <Button
+            style={{
+              flex: 1,
+              margin: 10,
+            }}
+            onPress={() => {
+              onDismiss();
+            }}
+            uppercase={false}
+            mode="outlined"
+          >
+            Cancle
+          </Button>
+        </View>
+      </View>
+    </Surface>
+  );
+}
+registerTranslation("en", en);
+function BillDatePicker({ bill, setBill }: any) {
+  const [date, setDate] = React.useState<Date | undefined>(undefined);
+  const [open, setOpen] = React.useState(false);
+
+  const onDismissSingle = React.useCallback(() => {
+    setOpen(false);
+  }, [setOpen]);
+
+  const onConfirmSingle = React.useCallback(
+    (params) => {
+      if (params.date) {
+        setBill({ ...bill, date: params.date.toISOString() });
+      } else {
+        setBill({ ...bill, date: new Date().toISOString() });
+      }
+      setOpen(false);
+      setDate(params.date);
+    },
+    [setOpen, setDate]
+  );
+
+  return (
+    <>
+      <TextInput
+        autoComplete="off"
+        label="Bill Due Date"
+        value={date?.toDateString()}
+        editable={false}
+        onPressIn={() => {
+          setOpen(true);
+        }}
+      />
+      {/* <Button onPress={() => setOpen(true)} uppercase={false} mode="outlined">
+        Pick single date
+      </Button> */}
+      <DatePickerModal
+        locale="en"
+        mode="single"
+        visible={open}
+        onDismiss={onDismissSingle}
+        date={date}
+        onConfirm={onConfirmSingle}
+        // validRange={{
+        //   startDate: new Date(2021, 1, 2),  // optional
+        //   endDate: new Date(), // optional
+        //   disabledDates: [new Date()] // optional
+        // }}
+        // onChange={} // same props as onConfirm but triggered without confirmed by user
+        // saveLabel="Save" // optional
+        // uppercase={false} // optional, default is true
+        // label="Select date" // optional
+        // animationType="slide" // optional, default is 'slide' on ios/android and 'none' on web
+      />
+    </>
   );
 }
 

@@ -35,6 +35,7 @@ import {
 import LinkingConfiguration from "./LinkingConfiguration";
 import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { IconButton } from "react-native-paper";
+import { DeviceEventEmitter } from "react-native";
 
 export default function Navigation({
   colorScheme,
@@ -83,36 +84,38 @@ function RootNavigator() {
           // headerStyle: {
           //   backgroundColor: Colors.primary,
           // },
-          headerTitle: () => (
-            <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text
-                style={{
-                  fontSize: PixelRatio.getFontScale() * 17,
-                  // fontWeight: "600",
-                  color: Colors.dark.text,
-                  paddingRight: 1,
-                  fontFamily: "OpenSans-SemiBold",
-                }}
-              >
-                {Months[new Date().getMonth()]}
-              </Text>
-              <MaterialIcons
-                name="expand-more"
-                size={20}
-                color={Colors.dark.text}
-                style={{ alignSelf: "center", paddingTop: 3 }}
-              />
-            </TouchableOpacity>
-          ),
+          // headerTitle: () => (
+          //   <TouchableOpacity
+          //     style={{
+          //       flexDirection: "row",
+          //       alignItems: "center",
+          //       justifyContent: "center",
+          //     }}
+          //   >
+          //     <Text
+          //       style={{
+          //         fontSize: PixelRatio.getFontScale() * 17,
+          //         // fontWeight: "600",
+          //         color: Colors.dark.text,
+          //         paddingRight: 1,
+          //         fontFamily: "OpenSans-SemiBold",
+          //       }}
+          //     >
+          //       {Months[new Date().getMonth()]}
+          //     </Text>
+          //     <MaterialIcons
+          //       name="expand-more"
+          //       size={20}
+          //       color={Colors.dark.text}
+          //       style={{ alignSelf: "center", paddingTop: 3 }}
+          //     />
+          //   </TouchableOpacity>
+          // ),
           headerRight: () => (
             <Pressable
-              onPress={() => navigation.navigate("Modal")}
+              onPress={() => {
+                DeviceEventEmitter.emit("show.addbill", {});
+              }}
               style={({ pressed }) => ({
                 opacity: pressed ? 0.5 : 1,
               })}

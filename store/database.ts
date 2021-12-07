@@ -104,6 +104,7 @@ export enum BillType {
   "Phone",
   "Cable",
   "Rent",
+  "Loan",
   "Other",
 }
 
