@@ -1,5 +1,6 @@
 import * as React from "react";
 import {
+  Alert,
   PixelRatio,
   Pressable,
   ScrollView,
@@ -159,19 +160,6 @@ export default function Dashboard({ navigation }: any) {
         console.log(error);
       }
     })();
-
-    // filter todays bills from data
-    // var d = new Date();
-    // // d.setDate(d.getDate() + 3);
-    // // // add sample bill
-    // db.addBill({
-    //   type: BillType.Internet,
-    //   name: "JIO Internet Bill",
-    //   amount: 1200.88,
-    //   date: d.toISOString(),
-    //   paid: 0,
-    //   note: "9426678969",
-    // });
   }, [visible, refresh]);
 
   if (loading) {
@@ -432,9 +420,21 @@ function BillCard({ bill }: BillCardProps) {
   return (
     <TouchableOpacity
       onPress={() => {
-        db.payBill(bill.id).then(() => {
-          DeviceEventEmitter.emit("refresh.bills");
-        });
+        if (bill.paid == 0) {
+          Alert.alert("Bill", "Do you want to pay this bill?", [
+            {
+              text: "Yes",
+              onPress: () => {
+                db.payBill(bill.id).then(() => {
+                  DeviceEventEmitter.emit("refresh.bills");
+                });
+              },
+            },
+            {
+              text: "No",
+            },
+          ]);
+        }
       }}
     >
       <View
@@ -888,10 +888,19 @@ function NewBillComponent({ onDismiss }: any) {
               margin: 10,
             }}
             onPress={() => {
-              db.addBill({
-                ...bill,
-              });
-              onDismiss();
+              console.log(bill.name.length);
+              if (bill.name.length <= 0) {
+                alert("Name cannot be empty");
+              } else if (bill.amount <= 0) {
+                alert("Amount cannot be empty");
+              } else if (bill.date === "") {
+                alert("Date cannot be empty");
+              } else {
+                db.addBill({
+                  ...bill,
+                });
+                onDismiss();
+              }
             }}
             uppercase={false}
             mode="outlined"
