@@ -151,6 +151,7 @@ function RootNavigator() {
           headerStyle: {
             backgroundColor: Colors.primary,
           },
+          headerBackTitle: "",
           // headerTransparent: true,
         }}
       />
@@ -160,6 +161,7 @@ function RootNavigator() {
         options={{
           title: "Paid Bills",
           headerTintColor: Colors.dark.text,
+          headerBackTitle: "",
           headerStyle: {
             backgroundColor: Colors.primary,
           },
