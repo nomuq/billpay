@@ -36,6 +36,7 @@ import LinkingConfiguration from "./LinkingConfiguration";
 import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { IconButton } from "react-native-paper";
 import { DeviceEventEmitter } from "react-native";
+import MissedBills from "../screens/MissedBills";
 
 export default function Navigation({
   colorScheme,
@@ -139,6 +140,18 @@ function RootNavigator() {
         name="NotFound"
         component={NotFoundScreen}
         options={{ title: "Oops!" }}
+      />
+      <Stack.Screen
+        name="MissedBills"
+        component={MissedBills}
+        options={{
+          title: "Missed Bills",
+          headerTintColor: Colors.dark.text,
+          headerStyle: {
+            backgroundColor: Colors.primary,
+          },
+          // headerTransparent: true,
+        }}
       />
       <Stack.Group screenOptions={{ presentation: "modal" }}>
         <Stack.Screen name="Modal" component={ModalScreen} />

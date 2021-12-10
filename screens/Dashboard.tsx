@@ -244,7 +244,11 @@ export default function Dashboard({ navigation }: any) {
               </Text>
             </View>
             <ProgressBar
-              progress={totalPaid / totalThisMonth}
+              progress={
+                isNaN(totalPaid / totalThisMonth)
+                  ? 0
+                  : totalPaid / totalThisMonth
+              }
               color={"#16c591"}
               style={{
                 backgroundColor: "#fff",
@@ -290,7 +294,7 @@ export default function Dashboard({ navigation }: any) {
                 <MissedBillsComponent
                   bills={missedBills}
                   onPress={() => {
-                    navigation.navigate("Modal");
+                    navigation.navigate("MissedBills");
                   }}
                 />
               )}
@@ -393,7 +397,7 @@ function UpcomingBills({ bills }: any) {
   );
 }
 
-function BillList({ bills }: any) {
+export function BillList({ bills }: any) {
   return (
     <Surface
       style={{
