@@ -378,7 +378,7 @@ function UpcomingBills({ bills }: any) {
         </Text>
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate("Modal");
+            navigation.navigate("PaidBills");
           }}
         >
           <Text
@@ -506,7 +506,7 @@ function BillCard({ bill }: BillCardProps) {
               color: "#00000099",
             }}
           >
-            {bill.note}
+            {Date(bill.date).toString().substring(0, 21)}
           </Text>
         </View>
         <View

@@ -22,6 +22,7 @@ export type RootStackParamList = {
   NotFound: undefined;
   Dashboard: NavigatorScreenParams<any>;
   MissedBills: undefined;
+  PaidBills: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> =

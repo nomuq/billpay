@@ -37,6 +37,7 @@ import { Ionicons, FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { IconButton } from "react-native-paper";
 import { DeviceEventEmitter } from "react-native";
 import MissedBills from "../screens/MissedBills";
+import PaidBills from "../screens/PaidBills";
 
 export default function Navigation({
   colorScheme,
@@ -146,6 +147,18 @@ function RootNavigator() {
         component={MissedBills}
         options={{
           title: "Missed Bills",
+          headerTintColor: Colors.dark.text,
+          headerStyle: {
+            backgroundColor: Colors.primary,
+          },
+          // headerTransparent: true,
+        }}
+      />
+      <Stack.Screen
+        name="PaidBills"
+        component={PaidBills}
+        options={{
+          title: "Paid Bills",
           headerTintColor: Colors.dark.text,
           headerStyle: {
             backgroundColor: Colors.primary,
